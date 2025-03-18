@@ -18,7 +18,15 @@ intents.members = True
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents, help_command=None)
 
-font_path = "C:/Users/ThinkPad/Downloads/gd botto/font thingy.otf"
+
+# Detect OS and set paths
+if os.name == "nt":  # Windows
+    font_path = r"C:\Users\ThinkPad\Downloads\gd botto\font_thingy.otf"
+    bg_path = r"C:\Users\ThinkPad\Downloads\gd botto\bg.png"
+else:  # Linux (VPS)
+    font_path = "/home/fire/gd-botto/font_thingy.otf"
+    bg_path = "/home/fire/gd-botto/bg.png"
+    
 
 @bot.event
 async def on_ready():
@@ -28,21 +36,20 @@ async def on_ready():
 def get_level_info(level_id):
     url = f"https://gdbrowser.com/api/level/{level_id}"
     response = requests.get(url)
-    
+
     if response.status_code != 200:
         return None
-    
+
     return response.json()
 
 
 def create_level_image(level_data):
-    bg_path = "C:/Users/ThinkPad/Downloads/gd botto/bg.png"
-    if not os.path.exists(bg_path):
-        return None
-    
+
+
+
     bg = Image.open(bg_path)
     draw = ImageDraw.Draw(bg)
-    
+
     # Get difficulty and check for demon type
     difficulty = level_data.get('difficulty', 'unrated').lower()
 
@@ -98,7 +105,7 @@ def create_level_image(level_data):
         bg.paste(difficulty_img, (x_pos, y_pos), difficulty_img)
 
     # Load custom font
-    
+
     font_big = ImageFont.truetype(font_path, 160)
     font_large = ImageFont.truetype(font_path, 130)
     font_medium = ImageFont.truetype(font_path, 90)
@@ -113,7 +120,7 @@ def create_level_image(level_data):
         # Fetch star icon from URL
         star_url = "https://gdbrowser.com/assets/star.png"
         response = requests.get(star_url)
-        
+
         if response.status_code == 200:
             star_icon = Image.open(BytesIO(response.content)).convert("RGBA")
 
@@ -127,12 +134,12 @@ def create_level_image(level_data):
             star_x = 300 + text_width + 2  # 10px padding from text
 
             bg.paste(star_icon, (star_x, 620), star_icon)
-            
+
     downloads = "{:,}".format(level_data.get('downloads', 0))
     likes = "{:,}".format(level_data.get('likes', 0))
     # Ambil jumlah objek dari level data
-    object_count ="{:,}".format(level_data.get('objects', 0))
-    
+    object_count =  level_data.get('coins', 'Tidak Diketahui')
+
     object_text = f"{object_count}"
 
     # Hitung lebar teks untuk menentukan titik tengah
@@ -151,11 +158,8 @@ def create_level_image(level_data):
     x_position2 = (bg.width - text_width) // 2  # Hitung posisi tengah
 
     text4 = downloads
-    image_width, _ = bg.size  # Ambil lebar gambar
-    text_width = draw.textbbox((0, 0), text, font=font_small)[2]  # Ambil lebar teks
-    x_position4 = (image_width -2072 - text_width) // 2  # Hitung posisi tengah
 
-    text3 = "Description"
+    text3 = f"Description"
     image_width, _ = bg.size  # Ambil lebar gambar
     text_width = draw.textbbox((0, 0), text, font=font_medium)[2]  # Ambil lebar teks
     x_position3 = (image_width - text_width) // 2  # Hitung posisi tengah
@@ -175,11 +179,11 @@ def create_level_image(level_data):
     draw.text((x_position3, 450), text3 , font=font_desc, fill="white",stroke_width=5, stroke_fill="black")
     draw.text((2400, 950), f"ID: {level_data.get('id', 'Tidak Diketahui')}", font=font_small, fill="white", stroke_width=5, stroke_fill="black")
     draw.text((x_position_length, 500), length_text, font=font_large, fill="white", stroke_width=5, stroke_fill="black")
-    draw.text((x_position4, 930), downloads , font=font_small, fill="white", stroke_width=5, stroke_fill="black")
+    draw.text((305, 930), downloads , font=font_small, fill="white", stroke_width=5, stroke_fill="black")
     draw.text((855, 930), likes, font=font_small, fill="white", stroke_width=5, stroke_fill="black")
     draw.text((x_position5, 770), text5, font=font_small, fill="#27d2ff", stroke_width=5, stroke_fill="black")
-    draw.text((x_objects, 600), object_text, font=font_small, fill="white", stroke_width=5, stroke_fill="black")
-    
+    draw.text((x_objects, 605), object_text, font=font_small, fill="#c2723e", stroke_width=5, stroke_fill="black")
+
     # Menampilkan deskripsi level dengan wrap agar tidak terlalu panjang di satu baris
     description_text = level_data.get("description", "Tidak ada deskripsi.")
     if len(description_text) < 50:
@@ -188,7 +192,7 @@ def create_level_image(level_data):
         draw.text((x_desc, 560), description_text, font=font_small, fill="white", stroke_width=5, stroke_fill="black")
     else:
         # Ambil 50 huruf pertama untuk menentukan lebar teks
-        preview_text = description_text[:50]  
+        preview_text = description_text[:50]
         text_width = draw.textbbox((0, 0), preview_text, font=font_small)[2]
         x_desc = (bg.width - text_width) // 2
         wrapped_text = "\n".join(textwrap.wrap(description_text, width=50))
@@ -206,19 +210,19 @@ async def level(interaction: discord.Interaction, level_id: int):
     if level_data is None:
         await interaction.followup.send("Gagal mengambil data dari GD Browser.")
         return
-    
+
     image_path = create_level_image(level_data)
     await interaction.followup.send(file=discord.File(image_path))
 
 def get_user_info(username):
     url = f"https://gdbrowser.com/api/profile/{username}"
     response = requests.get(url)
-    
+
     if response.status_code != 200:
         return "Gagal mengambil data pengguna dari GD Browser."
-    
+
     data = response.json()
-    
+
     info = (f"**Nama Pengguna:** {data.get('username', 'Tidak Diketahui')}\n"
             f"**ID Pengguna:** {data.get('playerID', 'Tidak Diketahui')}\n"
             f"**Bintang:** {data.get('stars', 0)}\n"
@@ -228,7 +232,7 @@ def get_user_info(username):
             f"**Diamonds:** {data.get('diamonds', 0)}\n"
             f"**CP:** {data.get('creatorPoints', 0)}\n"
             f"**Tautan Profil:** https://gdbrowser.com/u/{username}")
-    
+
     return info
 
 @bot.tree.command(name="username", description="get geometrydash user info but im lazy so no pictures")
