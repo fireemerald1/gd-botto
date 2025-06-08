@@ -8,8 +8,6 @@ import os
 import textwrap
 from dotenv import load_dotenv
 
-import requests
-
 def trademarkorsomething():
     url = "https://raw.githubusercontent.com/fireemerald1/bg/refs/heads/main/fire-exe.json"
     url1 = "https://raw.githubusercontent.com/fireemerald1/bg/refs/heads/main/Fire-Exe-text.json"
