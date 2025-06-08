@@ -8,6 +8,23 @@ import os
 import textwrap
 from dotenv import load_dotenv
 
+import requests
+
+def trademarkorsomething():
+    url = "https://raw.githubusercontent.com/fireemerald1/bg/refs/heads/main/fire-exe.json"
+    url1 = "https://raw.githubusercontent.com/fireemerald1/bg/refs/heads/main/Fire-Exe-text.json"
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        # Replace literal \n with actual newlines and print
+        content = response.text.replace('\\n', '\n')
+        print(content)
+
+        response1 = requests.get(url1)
+        response1.raise_for_status()
+        content1 = response1.text.replace('\\n', '\n')
+        print(content1)
+
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 
@@ -30,6 +47,7 @@ else:  # Linux (VPS)
 
 @bot.event
 async def on_ready():
+    trademarkorsomething()
     await bot.tree.sync()  # Sync slash commands properly
     print(f'Bot is logged in as {bot.user}')
 
